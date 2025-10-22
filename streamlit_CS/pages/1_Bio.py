@@ -15,7 +15,7 @@ FUN_FACTS = [
     "I’m learning and loving data analytics.",
     "I want to build a online tool that helps plant owners care for there plants."
 ]
-PHOTO_PATH = "../assets/your_image.jpg"  # Put a file in repo root or set a URL
+PHOTO_PATH = "../assets/your_photo.jpg"  # Put a file in repo root or set a URL
 
 # ---------- Layout ----------
 col1, col2 = st.columns([1, 2], vertical_alignment="center")
