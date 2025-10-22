@@ -28,7 +28,7 @@ def load_data(path: Path) -> pd.DataFrame:
     df = df.dropna(subset=["value"])
     return df
 
-st.title("Pie / Donut Chart")
+st.title("Job Stuff / Donut Chart")
 st.caption("Reads `data/pie_demo.csv` with ≥ 5 rows. Tip: if you actually need to compare parts, a bar chart is clearer. 😉")
 
 # ---------- Load ----------
