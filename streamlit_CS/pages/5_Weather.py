@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 import plotly.express as px
 import time
+import json
 
 # 1) Read API once
 st.set_page_config(page_title="Weather Updates in the Bermuda Triangle", page_icon="⛈️", layout="wide")
@@ -44,6 +45,34 @@ def get_weather():
     return pd.DataFrame([{"time": pd.to_datetime(j["time"]),
                           "temperature": j["temperature_2m"],
                           "wind": j["wind_speed_10m"]}])
+# bern triangle geojson 
+triangle_geojson = {
+  "type": "FeatureCollection",
+  "features": [{
+    "type": "Feature",
+    "id": "bermuda_triangle",
+    "properties": {"name": "Bermuda Triangle"},
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [[
+        [-80.1918, 25.7617],  # Miami
+        [-64.7505, 32.3078],  # Bermuda
+        [-66.1057, 18.4655],  # San Juan
+        [-80.1918, 25.7617]   # back to Miami to close
+      ]]
+    }
+  }]
+}
+
+metric = st.radio("Color by", ["temperature", "wind"], horizontal=True)
+
+data = pd.DataFrame({
+    "id": ["bermuda_triangle"],
+    "value": [df.iloc[0][metric]],
+    "label": [f"{metric}: {df.iloc[0][metric]}"]
+})
+
+
 
 ############################################################################
 # 3) FETCH (CACHED)
@@ -87,8 +116,28 @@ if err:
 
 st.dataframe(df, use_container_width=True)
 
-fig = px.bar(df, x="coin", y='temperature_2m', title=f"Current price ({VS.upper()})")
+# fig = px.bar(df, x="coin", y='temperature_2m', title=f"Current price ({VS.upper()})")
+
+fig = px.choropleth(
+    data_frame=data,
+    geojson=triangle_geojson,
+    locations="id",
+    color="value",
+    featureidkey="id",
+    projection="natural earth",
+    hover_name="label",
+    color_continuous_scale="Viridis",
+)
+fig.update_geos(
+    showocean=True, oceancolor="#aadaff",
+    showland=False, showcountries=False,
+    fitbounds="locations"
+)
+fig.update_layout(margin=dict(l=0, r=0, t=0, b=0),
+                  coloraxis_colorbar=dict(title=metric))
+
 st.plotly_chart(fig, use_container_width=True)
+
 
 # If auto-refresh is ON, wait and rerun the app
 if auto_refresh:
