@@ -154,11 +154,11 @@ fig = px.choropleth(
     data_frame=data,
     geojson=triangle_geojson,
     locations="id",
-    color="Joly",
+    color="value",
     featureidkey="id",
     projection="natural earth",
     hover_name="label",
-    color_continuous_scale="Viridis",
+    color_continuous_scale="ylorrd",
 )
 
 fig.update_geos(
