@@ -64,7 +64,7 @@ triangle_geojson = {
   }]
 }
 
-metric = st.radio("Color by", ["temperature", "wind"], horizontal=True)
+metric = st.radio("Color by", ["temperature_2m", "wind_speed_10m"], horizontal=True)
 
 data = pd.DataFrame({
     "id": ["bermuda_triangle"],
