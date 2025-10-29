@@ -76,10 +76,10 @@ auto_refresh = st.toggle("Enable auto-refresh", value=False)
 # Show current refresh time
 st.caption(f"Last refreshed at: {time.strftime('%H:%M:%S')}")
 
-# MAIN VIEW
+# 5) MAIN VIEW --------------------------------------
 
 st.subheader("Prices")
-df, err = fetch_weather(API_URL)
+df, err = fetch_weather(wurl)
 
 if err:
     st.warning(f"{err}\nShowing sample data so the demo continues.")
