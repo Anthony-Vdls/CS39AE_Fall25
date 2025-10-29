@@ -118,10 +118,10 @@ st.caption(f"Last refreshed at: {time.strftime('%H:%M:%S')}")
 
 # 5) MAIN VIEW --------------------------------------
 
-st.subheader("Prices")
+st.subheader("Bermuda Triangle Weather")
 df, err = fetch_weather(lat, lon)
 
-metric = st.radio("Color by", ["temperature_2m", "wind_speed_10m"], horizontal=True)
+metric = st.radio("Color by", ["temperature (C)", "wind speed"], horizontal=True)
 
 data = pd.DataFrame({
     "id": ["bermuda_triangle"],
