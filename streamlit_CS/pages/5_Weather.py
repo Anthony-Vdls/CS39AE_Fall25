@@ -5,7 +5,7 @@ import plotly.express as px
 import time
 
 # 1) Read API once
-st.set_page_config(page_title="Live API Demo (Simple)", page_icon="📡", layout="wide")
+st.set_page_config(page_title="Weather Updates in the Bermuda Triangle", page_icon="⛈️", layout="wide")
 # Disable fade/transition so charts don't blink between reruns
 st.markdown("""
     <style>
@@ -16,8 +16,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("📡 Simple Live Data Demo (Open-Meteo)")
-st.caption("Friendly demo with manual refresh + fallback data so it never crashes.")
+st.title("Live weather updates in the worlds biggest plane graveyard✈️ ")
+st.caption("Wondering if its safe to traverse the Bermuda Triangle? You just found a resource to check before you brave the worlds biggest graveyard to air planes that diassapered👻")
 
 # 2) Config
 COINS = ["bitcoin", "ethereum"]
@@ -33,11 +33,23 @@ API_URL = build_url(COINS)
 SAMPLE_DF = pd.DataFrame(
     [{"coin": "bitcoin", VS: 68000}, {"coin": "ethereum", VS: 3500}]
 )
+############################################################################
+# Bermuda Triangle
+lat, lon = 25.853311586063516, -70.60603721520464 
+wurl = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,wind_speed_10m"
+@st.cache_data(ttl=600)
+def get_weather():
+    r = requests.get(wurl, timeout=10); r.raise_for_status()
+    j = r.json()["current"]
+    return pd.DataFrame([{"time": pd.to_datetime(j["time"]),
+                          "temperature": j["temperature_2m"],
+                          "wind": j["wind_speed_10m"]}])
 
+############################################################################
 # 3) FETCH (CACHED)
 @st.cache_data(ttl=300, show_spinner=False)   # Cache for 5 minutes
 
-def fetch_prices(url: str):
+def fetch_weather(url: str):
     """Return (df, error_message). Never raise. Safe for beginners."""
     try:
         resp = requests.get(url, timeout=10, headers=HEADERS)
@@ -67,7 +79,7 @@ st.caption(f"Last refreshed at: {time.strftime('%H:%M:%S')}")
 # MAIN VIEW
 
 st.subheader("Prices")
-df, err = fetch_prices(API_URL)
+df, err = fetch_weather(API_URL)
 
 if err:
     st.warning(f"{err}\nShowing sample data so the demo continues.")
@@ -81,6 +93,6 @@ st.plotly_chart(fig, use_container_width=True)
 # If auto-refresh is ON, wait and rerun the app
 if auto_refresh:
     time.sleep(refresh_sec)
-    fetch_prices.clear()
+    fetch_weather.clear()
     st.rerun()
 
