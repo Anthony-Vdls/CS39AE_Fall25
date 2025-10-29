@@ -45,7 +45,7 @@ def get_weather():
     return pd.DataFrame([{"time": pd.to_datetime(j["time"]),
                           "temperature": j["temperature_2m"],
                           "wind": j["wind_speed_10m"]}])
-# bern triangle geojson 
+# bern triangle geojson polygon only 
 triangle_geojson = {
   "type": "FeatureCollection",
   "features": [{
@@ -89,7 +89,7 @@ def fetch_weather(lat: float, lon: float):
         j = resp.json()
 
         cur = j.get("current", {})
-        # Defensive: ensure keys exist
+        # key?  
         if not {"time", "temperature_2m", "wind_speed_10m"} <= cur.keys():
             return None, "API response missing expected 'current' fields"
 
@@ -121,19 +121,30 @@ st.caption(f"Last refreshed at: {time.strftime('%H:%M:%S')}")
 st.subheader("Bermuda Triangle Weather")
 df, err = fetch_weather(lat, lon)
 
-metric = st.radio("Color by", ["temperature (C)", "wind speed"], horizontal=True)
+if err or df is None or df.empty:
+    st.warning(f"{err or 'No data returned'}\nShowing sample row so the demo continues.")
+    # Minimal stand-in row that matches expected columns
+    df = pd.DataFrame([{
+        "time": pd.Timestamp.utcnow(),
+        "temperature_2m": float("nan"),
+        "wind_speed_10m": float("nan"),
+    }])
+
+metric_map = {
+    "Temperature (°C)": "temperature_2m",
+    "Wind speed (km/h)": "wind_speed_10m",
+}
+
+metric_label = st.radio("Color by", list(metric_map.keys()), horizontal=True)
+metric_col = metric_map[metric_label]
+value = df.iloc[0][metric_col]
 
 data = pd.DataFrame({
     "id": ["bermuda_triangle"],
-    "value": [df.iloc[0][metric]],
-    "label": [f"{metric}: {df.iloc[0][metric]}"]
+    "value": [value],
+    "label": [f"{metric_label}: {value}"],
 })
 
-
-
-if err:
-    st.warning(f"{err}\nShowing sample data so the demo continues.")
-    df = SAMPLE_DF.copy()
 
 st.dataframe(df, use_container_width=True)
 
@@ -149,13 +160,15 @@ fig = px.choropleth(
     hover_name="label",
     color_continuous_scale="Viridis",
 )
+
 fig.update_geos(
     showocean=True, oceancolor="#aadaff",
     showland=False, showcountries=False,
     fitbounds="locations"
 )
+
 fig.update_layout(margin=dict(l=0, r=0, t=0, b=0),
-                  coloraxis_colorbar=dict(title=metric))
+                  coloraxis_colorbar=dict(title=metric_label))
 
 st.plotly_chart(fig, use_container_width=True)
 
