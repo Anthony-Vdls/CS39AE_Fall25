@@ -87,7 +87,7 @@ if err:
 
 st.dataframe(df, use_container_width=True)
 
-fig = px.bar(df, x="coin", y=VS, title=f"Current price ({VS.upper()})")
+fig = px.bar(df, x="coin", y='time', title=f"Current price ({VS.upper()})")
 st.plotly_chart(fig, use_container_width=True)
 
 # If auto-refresh is ON, wait and rerun the app
