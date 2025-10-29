@@ -64,34 +64,45 @@ triangle_geojson = {
   }]
 }
 
-metric = st.radio("Color by", ["temperature_2m", "wind_speed_10m"], horizontal=True)
-
-data = pd.DataFrame({
-    "id": ["bermuda_triangle"],
-    "value": [df.iloc[0][metric]],
-    "label": [f"{metric}: {df.iloc[0][metric]}"]
-})
-
-
 
 ############################################################################
 # 3) FETCH (CACHED)
 @st.cache_data(ttl=300, show_spinner=False)   # Cache for 5 minutes
+def fetch_weather(lat: float, lon: float):
+    """
+    Return (df, err). df has columns: time, temperature_2m, wind_speed_10m.
+    Never raises; safe for UI code.
+    """
+    url = (
+        "https://api.open-meteo.com/v1/forecast"
+        f"?latitude={lat}&longitude={lon}"
+        "&current=temperature_2m,wind_speed_10m"
+        "&timezone=UTC"  # keep timestamps stable
+    )
 
-def fetch_weather(url: str):
-    """Return (df, error_message). Never raise. Safe for beginners."""
     try:
         resp = requests.get(url, timeout=10, headers=HEADERS)
-        # Handle 429 and other non-200s
         if resp.status_code == 429:
-            retry_after = resp.headers.get("Retry-After", "a bit")
-            return None, f"429 Too Many Requests — try again after {retry_after}s"
+            ra = resp.headers.get("Retry-After", "a bit")
+            return None, f"429 Too Many Requests — try again after {ra}s"
         resp.raise_for_status()
-        data = resp.json()
-        df = pd.DataFrame(data).T.reset_index().rename(columns={"index": "coin"})
+        j = resp.json()
+
+        cur = j.get("current", {})
+        # Defensive: ensure keys exist
+        if not {"time", "temperature_2m", "wind_speed_10m"} <= cur.keys():
+            return None, "API response missing expected 'current' fields"
+
+        df = pd.DataFrame([{
+            "time": pd.to_datetime(cur["time"]),
+            "temperature_2m": cur["temperature_2m"],
+            "wind_speed_10m": cur["wind_speed_10m"],
+        }])
+
         return df, None
     except requests.RequestException as e:
         return None, f"Network/HTTP error: {e}"
+
 # 4) Refresh Button
 # --- Auto Refresh Controls ---
 st.subheader("🔁 Auto Refresh Settings")
@@ -108,7 +119,17 @@ st.caption(f"Last refreshed at: {time.strftime('%H:%M:%S')}")
 # 5) MAIN VIEW --------------------------------------
 
 st.subheader("Prices")
-df, err = fetch_weather(wurl)
+df, err = fetch_weather(lat, lon)
+
+metric = st.radio("Color by", ["temperature_2m", "wind_speed_10m"], horizontal=True)
+
+data = pd.DataFrame({
+    "id": ["bermuda_triangle"],
+    "value": [df.iloc[0][metric]],
+    "label": [f"{metric}: {df.iloc[0][metric]}"]
+})
+
+
 
 if err:
     st.warning(f"{err}\nShowing sample data so the demo continues.")
