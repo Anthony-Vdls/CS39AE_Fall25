@@ -131,7 +131,7 @@ if err or df is None or df.empty:
     }])
 
 metric_map = {
-    "Temperature (°C)": "temperature_2m",
+    "Temperature (C)": "temperature_2m",
     "Wind speed (km/h)": "wind_speed_10m",
 }
 
@@ -154,7 +154,7 @@ fig = px.choropleth(
     data_frame=data,
     geojson=triangle_geojson,
     locations="id",
-    color="value",
+    color="Joly",
     featureidkey="id",
     projection="natural earth",
     hover_name="label",
